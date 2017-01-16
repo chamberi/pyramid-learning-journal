@@ -1,0 +1,58 @@
+{% extends "layout.jinja2" %}
+{% block body %}
+    <article>
+        {% if request.authenticated_userid %}
+        <form action="" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ request.session.get_csrf_token() }}" />
+
+            <label for="title">New Entry Name: </label><br/>
+            <input id="title" type="text" name="title"/><br/>
+            
+            <label for="body">Text of article: </label><br/>
+            <textarea id="entry" name="body" cols=30" rows="1"></textarea><br>
+            <button type="button" id="submit"> Submit</button>
+        </form>
+        {% endif %}
+        <p id="thebody"></p>
+        {% for entry in entries %}
+            <h5>{{ entry.creation_date }}</h5>
+            <a href="{{ request.route_url('detail', id=entry.id) }}"><h4>{{ entry.title }}</h4></a>
+            
+            <p>{{ entry.body }}</p>
+        {% endfor %} 
+    </article>
+<script type="text/javascript">
+$(document).ready(function(){
+    var csrfToken = "{{request.session.get_csrf_token()}}";
+        var submit = $("#submit");
+        submit.on("click", function(){
+            $.ajax({
+                type: 'POST',
+                headers: { 'X-CSRF-Token': csrfToken },
+                url: 'create',
+                data: {"title": $('#title').val(), "body": $('#entry').val()},
+                success: function(){
+                    var creation = new Date()
+                    var year = creation.getFullYear()
+                    var month = creation.getMonth() + 1
+                    if (month.toString().length == 1) {
+                        month = "0" + month
+                    }
+                    var day = creation.getDate()
+                    if (day.toString().length == 1) {
+                        day = "0" + day
+                    }
+                    new_id = Number($('a:eq(3)').attr("href").split("/")[4]) + 1;
+                    console.log(new_id);
+                    $('#thebody').prepend('<h5>'+year+'-'+month+'-'+day+'</h5><a href="/journal/'+new_id+'"</h5><h4>'+$('#title').val()+'</h4></a><p>'+$('#entry').val()+'</p>')
+                    $('#title').val("")
+                    $('#entry').val("")
+                }
+
+
+            })
+        })
+})
+</script>
+{% endblock %}
+
